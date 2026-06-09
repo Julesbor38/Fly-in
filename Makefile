@@ -1,7 +1,7 @@
 
 PYTHON = python3
 SCRIPT = fly-in.py
-CONFIG = maps/easy/01_linear_path.txt
+CONFIG = maps/medium/03_priority_puzzle.txt
 
 .PHONY: install run debug clean lint lint-strict build
 

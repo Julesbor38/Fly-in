@@ -1,12 +1,15 @@
 from .models import Node, Connection
 
 
-def hub_exists(hubs: list[Node], name: str) -> bool:
-    return any(hub.name == name for hub in hubs)
+def hub_exists(hubs: dict[str, Node], name: str) -> bool:
+    return name in hubs
 
 
-def coordinates_exists(hubs: list[Node], x: int, y: int) -> bool:
-    return any(hub.x == x and hub.y == y for hub in hubs)
+def coordinates_exists(hubs: dict[str, Node], x: int, y: int) -> bool:
+    for hub in hubs.values():
+        if hub.x == x and hub.y == y:
+            return True
+    return False
 
 
 def connection_exists(connections: list[Connection],

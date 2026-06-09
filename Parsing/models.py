@@ -23,10 +23,13 @@ class Zone(Enum):
                 return Zone.NORMAL
 
 
+DEFAULT_COLOR = "gray"
+
+
 @dataclass
 class NodeMetadata:
     zone: Zone = Zone.NORMAL
-    color: str | None = None
+    color: str = DEFAULT_COLOR
     max_drones: int = 1
 
 
@@ -55,5 +58,5 @@ class Level:
     nb_drones: int
     start_hub: Node
     end_hub: Node
-    hubs: list[Node]
+    hubs: dict[str, Node]
     connections: list[Connection]

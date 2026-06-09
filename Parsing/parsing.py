@@ -11,7 +11,7 @@ class Parser:
         self.nb_drones: int | None = None
         self.start_hub: Node | None = None
         self.end_hub: Node | None = None
-        self.hub: list[Node] = []
+        self.hubs: dict[str, Node] = {}
         self.connections: list[Connection] = []
 
     def extract_line(self) -> list[tuple[int, str]]:
@@ -57,7 +57,7 @@ class Parser:
             nb_drones=self.nb_drones,
             start_hub=self.start_hub,
             end_hub=self.end_hub,
-            hubs=self.hub,
+            hubs=self.hubs,
             connections=self.connections
         )
 
@@ -92,12 +92,12 @@ class Parser:
             raise ParsingError(line_number,
                                "start_hub must contain name, x, y")
         name = info[0]
-        if hub_exists(self.hub, name):
+        if hub_exists(self.hubs, name):
             raise ParsingError(line_number, f"hub '{name}' already exists")
         try:
             x = int(info[1])
             y = int(info[2])
-            if coordinates_exists(self.hub, x, y):
+            if coordinates_exists(self.hubs, x, y):
                 raise ParsingError(line_number,
                                    f"coordinates ({x}, {y}) already used")
         except ValueError:
@@ -108,7 +108,7 @@ class Parser:
             y=y,
             metadata=metadata
         )
-        self.hub.append(self.start_hub)
+        self.hubs[self.start_hub.name] = self.start_hub
         return self.start_hub
 
     def parse_end_hub(self, line: str, line_number: int) -> Node:
@@ -129,12 +129,12 @@ class Parser:
             raise ParsingError(line_number,
                                "end_hub must contain name, x, y")
         name = info[0]
-        if hub_exists(self.hub, name):
+        if hub_exists(self.hubs, name):
             raise ParsingError(line_number, f"hub '{name}' already exists")
         try:
             x = int(info[1])
             y = int(info[2])
-            if coordinates_exists(self.hub, x, y):
+            if coordinates_exists(self.hubs, x, y):
                 raise ParsingError(line_number,
                                    f"coordinates ({x}, {y}) already used")
         except ValueError:
@@ -145,7 +145,7 @@ class Parser:
             y=y,
             metadata=metadata
         )
-        self.hub.append(self.end_hub)
+        self.hubs[self.end_hub.name] = self.end_hub
         return self.end_hub
 
     def check_data(self) -> None:
@@ -172,17 +172,18 @@ class Parser:
         if len(info) != 3:
             raise ParsingError(line_number, "hub must contain name, x, y")
         name: str = info[0]
-        if hub_exists(self.hub, name):
+        if hub_exists(self.hubs, name):
             raise ParsingError(line_number, f"hub '{name}' already exists")
         try:
             x = int(info[1])
             y = int(info[2])
-            if coordinates_exists(self.hub, x, y):
+            if coordinates_exists(self.hubs, x, y):
                 raise ParsingError(line_number,
                                    f"coordinates ({x}, {y}) already used")
         except ValueError:
             raise ParsingError(line_number, "x and y must be integer")
-        self.hub.append(Node(name=name, x=x, y=y, metadata=metadata))
+        node = Node(name=name, x=x, y=y, metadata=metadata)
+        self.hubs[node.name] = node
 
     def parse_connection(self, line: str, line_number: int) -> None:
         parts: list[str] = line.split(":", 1)
@@ -201,12 +202,12 @@ class Parser:
                                "connection: must contain 'source'-'target'")
 
         source = connection[0].strip()
-        if not hub_exists(self.hub, source):
+        if not hub_exists(self.hubs, source):
             raise ParsingError(line_number, f"unknow hub {source}")
         target = connection[1].strip()
         if source == target:
             raise ParsingError(line_number, "a hub cannot connect to himself")
-        if not hub_exists(self.hub, target):
+        if not hub_exists(self.hubs, target):
             raise ParsingError(line_number, f"unknow hub {target}")
         if (connection_exists(self.connections, source, target)):
             raise ParsingError(line_number,
