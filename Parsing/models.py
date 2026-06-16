@@ -54,9 +54,21 @@ class Connection:
 
 
 @dataclass
+class Drone:
+    id: int
+    current_hub: str
+    path: list[str]
+    path_index: int = 0
+    wait_turns: int = 0
+    pending_hub: str | None = None
+    current_connection: tuple[str, str] | None = None
+
+
+@dataclass
 class Level:
     nb_drones: int
     start_hub: Node
     end_hub: Node
     hubs: dict[str, Node]
     connections: list[Connection]
+    turn: int = 0

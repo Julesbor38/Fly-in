@@ -1,7 +1,7 @@
 
 PYTHON = python3
 SCRIPT = fly-in.py
-CONFIG = maps/medium/03_priority_puzzle.txt
+CONFIG = maps/challenger/01_the_impossible_dream.txt
 
 .PHONY: install run debug clean lint lint-strict build
 
