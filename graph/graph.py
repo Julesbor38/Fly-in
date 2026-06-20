@@ -48,10 +48,6 @@ class Graph:
             case Zone.BLOCKED:
                 return 99999
 
-    def display(self) -> None:
-        for hub, neighbors in self.adjacency.items():
-            print(f"{hub} -> {neighbors}")
-
     def is_priority_hub(self, hub_name: str) -> bool:
         return (self.nodes[hub_name].metadata.zone == Zone.PRIORITY)
 
@@ -89,5 +85,4 @@ class Graph:
         while current is not None:
             path.append(current)
             current = parents[current]
-        print(distances)
         return path[::-1]

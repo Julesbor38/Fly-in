@@ -18,6 +18,195 @@ COLORS = {
 }
 
 
+def draw_hubs(
+    screen: pygame.Surface,
+    level: Level,
+    simulator: Simulator,
+    font: pygame.font.Font,
+    scale: int,
+    offset_x: int,
+    offset_y: int,
+) -> None:
+
+    HUB_RADIUS = 45
+
+    for node in level.hubs.values():
+
+        x = offset_x + node.x * scale
+        y = offset_y - node.y * scale
+
+        rgb = COLORS.get(
+            node.metadata.color.lower(),
+            (180, 180, 180)
+        )
+
+        occupancy = simulator.hub_occupancy.get(
+            node.name,
+            0
+        )
+
+        pygame.draw.circle(
+            screen,
+            rgb,
+            (x, y),
+            HUB_RADIUS
+        )
+
+        pygame.draw.circle(
+            screen,
+            (255, 255, 255),
+            (x, y),
+            HUB_RADIUS,
+            3
+        )
+
+        count_text = font.render(
+            str(occupancy),
+            True,
+            (255, 255, 255)
+        )
+
+        screen.blit(
+            count_text,
+            (
+                x - count_text.get_width() // 2,
+                y - HUB_RADIUS - 25
+            )
+        )
+
+        name_text = font.render(
+            node.name,
+            True,
+            (255, 255, 255)
+        )
+
+        screen.blit(
+            name_text,
+            (
+                x - name_text.get_width() // 2,
+                y + HUB_RADIUS + 10
+            )
+        )
+
+
+def draw_connections(
+    screen: pygame.Surface,
+    level: Level,
+    scale: int,
+    offset_x: int,
+    offset_y: int,
+) -> None:
+
+    for connection in level.connections:
+
+        source = level.hubs[
+            connection.source
+        ]
+
+        target = level.hubs[
+            connection.target
+        ]
+
+        x1 = offset_x + source.x * scale
+        y1 = offset_y - source.y * scale
+
+        x2 = offset_x + target.x * scale
+        y2 = offset_y - target.y * scale
+
+        pygame.draw.line(
+            screen,
+            (180, 180, 180),
+            (x1, y1),
+            (x2, y2),
+            8
+        )
+
+
+def draw_drones(
+    screen: pygame.Surface,
+    level: Level,
+    simulator: Simulator,
+    drone_image: pygame.Surface,
+    font: pygame.font.Font,
+    scale: int,
+    offset_x: int,
+    offset_y: int,
+) -> None:
+
+    for drone in simulator.drones:
+
+        if drone.current_connection:
+
+            source_name, target_name = (
+                drone.current_connection
+            )
+
+            source = level.hubs[source_name]
+            target = level.hubs[target_name]
+
+            target_x = (
+                offset_x
+                + ((source.x + target.x) / 2) * scale
+            )
+
+            target_y = (
+                offset_y
+                - ((source.y + target.y) / 2) * scale
+            )
+
+        else:
+
+            hub = level.hubs[
+                drone.current_hub
+            ]
+
+            target_x = (
+                offset_x
+                + hub.x * scale
+            )
+
+            target_y = (
+                offset_y
+                - hub.y * scale
+            )
+
+        drone.render_x += (
+            target_x - drone.render_x
+        ) * 0.15
+
+        drone.render_y += (
+            target_y - drone.render_y
+        ) * 0.15
+
+        screen.blit(
+            drone_image,
+            (
+                drone.render_x
+                - drone_image.get_width() // 2,
+
+                drone.render_y
+                - drone_image.get_height() // 2
+            )
+        )
+
+        text = font.render(
+            str(drone.id),
+            True,
+            (255, 255, 255)
+        )
+
+        screen.blit(
+            text,
+            (
+                drone.render_x
+                - text.get_width() // 2,
+
+                drone.render_y
+                - text.get_height() // 2
+            )
+        )
+
+
 def visualisation(level: Level, simulator: Simulator) -> None:
     pygame.init()
 
@@ -26,7 +215,7 @@ def visualisation(level: Level, simulator: Simulator) -> None:
     SCALE = 200
     OFFSET_X = 100
     OFFSET_Y = HEIGHT // 2
-    DEFAULT_COLOR = (180, 180, 180)
+    MOVE_DURATION = 500
     last_move = pygame.time.get_ticks()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Fly-in")
@@ -35,20 +224,26 @@ def visualisation(level: Level, simulator: Simulator) -> None:
     drone_image = pygame.transform.scale(drone_image, (50, 50))
     font = pygame.font.Font(None, 30)
     running = True
+    for drone in simulator.drones:
+        hub = level.hubs[drone.current_hub]
+        drone.render_x = OFFSET_X + hub.x * SCALE
+        drone.render_y = OFFSET_Y - hub.y * SCALE
     while running:
         if all(
             drone.current_hub == level.end_hub.name
             for drone in simulator.drones
         ):
-            print(
-                f"Finished in {level.turn} turns"
-            )
             running = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
+        current_time = pygame.time.get_ticks()
+        if current_time - last_move > MOVE_DURATION:
+            level.turn += 1
+            simulator.step()
+            last_move = current_time
         screen.fill((30, 30, 30))
         turn_text = font.render(
             f"Turn: {level.turn}",
@@ -60,76 +255,15 @@ def visualisation(level: Level, simulator: Simulator) -> None:
             turn_text,
             (20, 20)
         )
-        for node in level.hubs.values():
-            x = OFFSET_X + node.x * SCALE
-            y = OFFSET_Y - node.y * SCALE
-            rgb: tuple[int, int, int] = COLORS.get(
-                node.metadata.color.lower(), DEFAULT_COLOR)
-            pygame.draw.circle(screen, rgb, (x, y), 60)
-        for connections in level.connections:
-            hub1 = level.hubs[connections.source]
-            hub2 = level.hubs[connections.target]
-            x1 = OFFSET_X + hub1.x * SCALE
-            y1 = OFFSET_Y - hub1.y * SCALE
-            x2 = OFFSET_X + hub2.x * SCALE
-            y2 = OFFSET_Y - hub2.y * SCALE
-            pygame.draw.line(screen, (200, 200, 200), (x1, y1), (x2, y2), 10)
+        draw_connections(screen, level, SCALE, OFFSET_X, OFFSET_Y)
+
+        draw_hubs(screen, level, simulator, font, SCALE, OFFSET_X, OFFSET_Y)
+
         current_time = pygame.time.get_ticks()
-        if current_time - last_move > 1000:
-            level.turn += 1
-            simulator.step()
-            last_move = current_time
-        try:
-            for drone in simulator.drones:
 
-                if drone.current_connection is not None:
+        draw_drones(screen, level, simulator, drone_image,
+                    font, SCALE, OFFSET_X, OFFSET_Y)
 
-                    source_name, target_name = drone.current_connection
-
-                    source = level.hubs[source_name]
-                    target = level.hubs[target_name]
-
-                    x1 = OFFSET_X + source.x * SCALE
-                    y1 = OFFSET_Y - source.y * SCALE
-
-                    x2 = OFFSET_X + target.x * SCALE
-                    y2 = OFFSET_Y - target.y * SCALE
-
-                    # milieu de la connexion
-                    x = (x1 + x2) // 2
-                    y = (y1 + y2) // 2
-
-                else:
-
-                    hub = level.hubs[drone.current_hub]
-
-                    x = OFFSET_X + hub.x * SCALE
-                    y = OFFSET_Y - hub.y * SCALE
-
-                screen.blit(
-                    drone_image,
-                    (
-                        x - drone_image.get_width() // 2,
-                        y - drone_image.get_height() // 2
-                    )
-                )
-
-                text = font.render(
-                    str(drone.id),
-                    True,
-                    (255, 255, 255)
-                )
-
-                screen.blit(
-                    text,
-                    (
-                        x - text.get_width() // 2,
-                        y - text.get_height() // 2
-                    )
-                )
-            pygame.display.flip()
-            clock.tick(60)
-        except Exception:
-            print("MapError, could not identify Exit point from start")
-            break
+        pygame.display.flip()
+        clock.tick(60)
     pygame.quit()

@@ -21,7 +21,6 @@ def main() -> None:
         paths = planner.generate_all_paths(
             level.nb_drones
         )
-        print("Longest path:", max(len(path) for path in paths))
         drones = [
             Drone(
                 id=i + 1,

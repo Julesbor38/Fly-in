@@ -60,6 +60,8 @@ class Drone:
     path: list[str]
     path_index: int = 0
     wait_turns: int = 0
+    render_x: float = 0
+    render_y: float = 0
     pending_hub: str | None = None
     current_connection: tuple[str, str] | None = None
 
