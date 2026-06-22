@@ -1,16 +1,15 @@
 
 PYTHON = python3
 SCRIPT = fly-in.py
-CONFIG = maps/challenger/01_the_impossible_dream.txt
 
 .PHONY: install run debug clean lint lint-strict build
 
 
 run:
-	 $(PYTHON) $(SCRIPT) $(CONFIG) || true
+	 $(PYTHON) $(SCRIPT) || true
 
 debug:
-	@poetry run $(PYTHON) -m pdb $(SCRIPT) $(CONFIG) || true
+	@poetry run $(PYTHON) -m pdb $(SCRIPT) || true
 
 clean:
 	@rm -rf */__pycache__

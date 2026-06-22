@@ -4,6 +4,9 @@ from Parsing.models import Drone, Node
 
 class Simulator:
     def __init__(self, graph: Graph, drones: list[Drone]) -> None:
+        """simulator use onformations extracted from graph
+        this representation add occupation for hub and connection
+        we also set the start_hub occupancy to len(nb_drones0)"""
         self.graph: Graph = graph
         self.drones: list[Drone] = drones
         self.hub_occupancy: dict[str, int] = {}
@@ -11,6 +14,7 @@ class Simulator:
         self.hub_occupancy[self.graph.start_hub.name] = len(self.drones)
 
     def can_enter_hub(self, hub_name: str) -> bool:
+        """Check if new_hub occupancy is least than max or if hub is end_hub"""
         if hub_name == self.graph.end_hub.name:
             return True
         hub: Node = self.graph.nodes[hub_name]
@@ -18,11 +22,14 @@ class Simulator:
         return occupancy < hub.metadata.max_drones
 
     def can_use_connection(self, source: str, target: str) -> bool:
+        """Check if connection occupancy is least than max"""
         connection = self.graph.connection_map[(source, target)]
         occupancy = self.connection_occupancy.get((source, target), 0)
         return occupancy < connection.metadata.max_link_capacity
 
     def move_drone(self, drone: Drone) -> bool:
+        """This methode adjust occupancy for connections and hubs,
+        we also adjust drones data for every turn"""
         if drone.wait_turns > 0:
             drone.wait_turns -= 1
             if drone.wait_turns == 0:

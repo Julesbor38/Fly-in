@@ -7,6 +7,7 @@ from .exception import ParsingError
 
 class Parser:
     def __init__(self, filename: str) -> None:
+        """all information extract from .txt"""
         self.filename = filename
         self.nb_drones: int | None = None
         self.start_hub: Node | None = None
@@ -15,6 +16,8 @@ class Parser:
         self.connections: list[Connection] = []
 
     def extract_line(self) -> list[tuple[int, str]]:
+        """Method to get a list of lines correspondng to line_number,
+        very usefull to handle ParsingError"""
         lines: list[tuple[int, str]] = []
         try:
             with open(self.filename, "r") as f:
@@ -30,6 +33,9 @@ class Parser:
         return (lines)
 
     def parsing(self) -> Level:
+        """main parsing method, calling all other methods
+        and control if everything is ok to lauch parsed
+        information to create True Level which can be used after"""
         lines: list[tuple[int, str]] = self.extract_line()
         if not lines:
             raise ParsingError(None, "Empty file")
@@ -62,6 +68,7 @@ class Parser:
         )
 
     def parse_nb_drones(self, line: str, line_number: int) -> int | None:
+        """nb_drones must be positive integer"""
         try:
             parts: list[str] = line.split(":")
             if len(parts) != 2:
@@ -75,6 +82,9 @@ class Parser:
         return (None)
 
     def parse_start_hub(self, line: str, line_number: int) -> Node:
+        """controle if there is only one starth_hub, after it
+        works like parse_hub method's, this method give also
+        max_drone= nb_drone for start_hub """
         if self.start_hub is not None:
             raise ParsingError(line_number,
                                "There must be exactly one start_hub: zone")
@@ -102,6 +112,8 @@ class Parser:
                                    f"coordinates ({x}, {y}) already used")
         except ValueError:
             raise ParsingError(line_number, "x and y must be integer")
+        if self.nb_drones is not None:
+            metadata.max_drones = self.nb_drones
         self.start_hub = Node(
             name=name,
             x=x,
@@ -112,6 +124,9 @@ class Parser:
         return self.start_hub
 
     def parse_end_hub(self, line: str, line_number: int) -> Node:
+        """controle if there is only one end_hub, after it
+        works like parse_hub method's, this method give also
+        max_drone= nb_drone for end_hub """
         if self.end_hub is not None:
             raise ParsingError(line_number,
                                "There must be exactly one end_hub: zone")
@@ -139,6 +154,8 @@ class Parser:
                                    f"coordinates ({x}, {y}) already used")
         except ValueError:
             raise ParsingError(line_number, "x and y must be integer")
+        if self.nb_drones is not None:
+            metadata.max_drones = self.nb_drones
         self.end_hub = Node(
             name=name,
             x=x,
@@ -149,6 +166,7 @@ class Parser:
         return self.end_hub
 
     def check_data(self) -> None:
+        """controle if there is no missing information"""
         if self.nb_drones is None:
             raise ParsingError(None, "Missing nb_drones")
         if self.start_hub is None:
@@ -159,6 +177,8 @@ class Parser:
             raise ParsingError(None, "Missing connection(s)")
 
     def parse_hub(self, line: str, line_number: int) -> None:
+        """controle if there is no duplicate name and coordinate
+        between hubs, this method also parse NodeMetada"""
         parts: list[str] = line.split(":", 1)
         if len(parts) != 2:
             raise ParsingError(line_number, "Invalid hub format")
@@ -186,6 +206,8 @@ class Parser:
         self.hubs[node.name] = node
 
     def parse_connection(self, line: str, line_number: int) -> None:
+        """controle if there is no duplicate connections,
+        this method also parse ConnectionMetadata"""
         parts: list[str] = line.split(":", 1)
         if len(parts) != 2:
             raise ParsingError(line_number, "invalid connection format")

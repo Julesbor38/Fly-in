@@ -5,12 +5,20 @@ from Parsing.exception import MapError
 
 class Planner:
     def __init__(self, graph: Graph) -> None:
+        """Initialize the planner.
+        The planner computes paths while taking hub and connection
+        reservations into account. This allows drones to avoid future
+        congestion and generate distinct optimized paths."""
         self.graph = graph
         self.hub_reservations: dict[tuple[str, int], int] = {}
         self.connection_reservations: dict[tuple[str, str,  int], int] = {}
 
     def generate_all_paths(self, nb_drones: int) -> list[list[str]]:
         paths: list[list[str]] = []
+        """Generate a path for each drone.
+        Each generated path is immediately reserved so that subsequent
+        drones take existing reservations into account when computing
+        their own route."""
         for _ in range(nb_drones):
             path = self.shortest_path_with_reservations(
                 self.graph.start_hub.name, self.graph.end_hub.name)
@@ -20,6 +28,14 @@ class Planner:
 
     def shortest_path_with_reservations(self, start: str,
                                         end: str) -> list[str]:
+        """Find the shortest path while respecting reservations.
+        This method uses a modified Dijkstra algorithm where each state
+        is defined by a hub and an arrival turn. Hub and connection
+        reservations are considered to avoid collisions between drones.
+        Priority hubs are preferred when multiple paths have the same
+        travel cost. Waiting on a hub is also considered as a valid move
+        when no immediate transition is possible.
+        Raises MapError: If no valid path exists between start and end."""
         from heapq import heappush, heappop
 
         start_state = (start, 0)
@@ -81,7 +97,10 @@ class Planner:
         return path[::-1]
 
     def reserve_path(self, path: list[str]) -> None:
-
+        """Reserve all hubs and connections used by a path.
+        Reservations are stored per turn to model future occupancy.
+        This prevents later drones from selecting routes that would
+        exceed hub capacities or connection limits."""
         current_turn = 0
 
         self.hub_reservations[(path[0], current_turn)] = (

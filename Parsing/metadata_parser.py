@@ -11,6 +11,8 @@ def parse_node_metadata(
     line_number: int
 ) -> NodeMetadata:
     metadata = NodeMetadata()
+    """Parse hub's metadata if they are only great
+    informations, color, zone and max_drones"""
     if not metadata_str:
         return metadata
     for item in metadata_str.split(" "):
@@ -53,6 +55,8 @@ def parse_connection_metadata(
     line_number: int
 ) -> ConnectionMetadata:
     metadata = ConnectionMetadata()
+    """Parse connection's metadata if they are only great
+    informations, max_link_capacity"""
     if not metadata_str:
         return metadata
     for item in metadata_str.split(" "):

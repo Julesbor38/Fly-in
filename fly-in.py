@@ -1,45 +1,59 @@
-import sys
-
 from Parsing.parsing import Parser
 from graph.graph import Graph
 from graph.visualizer import visualisation
 from graph.simulator import Simulator
 from Parsing.models import Drone
 from graph.solver import Planner
+from graph.menu import map_selection
 
 
 def main() -> None:
-    try:
-        parser = Parser(sys.argv[1])
+    while True:
+        try:
+            selected_map = map_selection()
+        except KeyboardInterrupt:
+            print("Warning, please interrupt program properly")
+            break
+        try:
 
-        level = parser.parsing()
+            parser = Parser(selected_map)
 
-        graph = Graph(level)
+            level = parser.parsing()
 
-        planner = Planner(graph)
+            graph = Graph(level)
 
-        paths = planner.generate_all_paths(
-            level.nb_drones
-        )
-        drones = [
-            Drone(
-                id=i + 1,
-                current_hub=paths[i][0],
-                path=paths[i]
+            planner = Planner(graph)
+
+            paths = planner.generate_all_paths(
+                level.nb_drones
             )
-            for i in range(level.nb_drones)
-        ]
 
-        simulator = Simulator(
-            graph,
-            drones
-        )
-        visualisation(
+            drones = [
+                Drone(
+                    id=i + 1,
+                    current_hub=paths[i][0],
+                    path=paths[i]
+                )
+                for i in range(level.nb_drones)
+            ]
+
+            simulator = Simulator(
+                graph,
+                drones
+            )
+        except Exception as e:
+            print(e)
+            continue
+
+        action = visualisation(
             level,
             simulator
         )
-    except Exception as e:
-        print(e)
+
+        if action == "menu":
+            continue
+
+        break
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 
 class Zone(Enum):
+
     NORMAL = auto()
     RESTRICTED = auto()
     PRIORITY = auto()
@@ -10,6 +11,7 @@ class Zone(Enum):
 
     @staticmethod
     def get_zone(zone_str: str) -> "Zone":
+        """convert matedata.zone in str to Enum """
         match zone_str:
             case "normal":
                 return Zone.NORMAL
@@ -40,6 +42,7 @@ class ConnectionMetadata:
 
 @dataclass
 class Node:
+    """Using parsing regroup every information for the hubs"""
     name: str
     x: int
     y: int
@@ -48,6 +51,7 @@ class Node:
 
 @dataclass
 class Connection:
+    """Using parsing regroup every information for the connections"""
     source: str
     target: str
     metadata: ConnectionMetadata = field(default_factory=ConnectionMetadata)
@@ -55,6 +59,8 @@ class Connection:
 
 @dataclass
 class Drone:
+    """define a specific class for drone, all thes information
+    are usefull for algorythm and visualisation"""
     id: int
     current_hub: str
     path: list[str]
@@ -68,6 +74,9 @@ class Drone:
 
 @dataclass
 class Level:
+    """class Level is usefull for solver and visualizer
+     for every maps, this can give us every information to create a
+     great algorythm and visualisation """
     nb_drones: int
     start_hub: Node
     end_hub: Node
