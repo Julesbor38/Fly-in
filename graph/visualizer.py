@@ -1,7 +1,8 @@
 import pygame
 from Parsing.models import Level
 from graph.simulator import Simulator
-
+from graph.visualizer_utils import build_ui, build_viewport, build_buttons
+from graph.visualizer_models import Viewport
 COLORS = {
     "red": (255, 0, 0),
     "green": (0, 255, 0),
@@ -23,10 +24,7 @@ def draw_hubs(
     level: Level,
     simulator: Simulator,
     font: pygame.font.Font,
-    scale_x: float,
-    scale_y: float,
-    offset_x: float,
-    offset_y: float,
+    viewport: Viewport
 ) -> None:
     """Draw all hubs on the screen.
 
@@ -38,8 +36,8 @@ def draw_hubs(
 
     for node in level.hubs.values():
 
-        x = offset_x + node.x * scale_x
-        y = offset_y - node.y * scale_y
+        x = viewport.offset_x + node.x * viewport.scale_x
+        y = viewport.offset_y - node.y * viewport.scale_y
 
         rgb = COLORS.get(
             node.metadata.color.lower(), (180, 180, 180))
@@ -63,10 +61,7 @@ def draw_hubs(
 def draw_connections(
     screen: pygame.Surface,
     level: Level,
-    scale_x: float,
-    scale_y: float,
-    offset_x: float,
-    offset_y: float,
+    viewport: Viewport
 ) -> None:
     """Draw all connections between hubs.
 
@@ -79,11 +74,11 @@ def draw_connections(
         source = level.hubs[connection.source]
         target = level.hubs[connection.target]
 
-        x1 = offset_x + source.x * scale_x
-        y1 = offset_y - source.y * scale_y
+        x1 = viewport.offset_x + source.x * viewport.scale_x
+        y1 = viewport.offset_y - source.y * viewport.scale_y
 
-        x2 = offset_x + target.x * scale_x
-        y2 = offset_y - target.y * scale_y
+        x2 = viewport.offset_x + target.x * viewport.scale_x
+        y2 = viewport.offset_y - target.y * viewport.scale_y
 
         pygame.draw.line(
             screen, (180, 180, 180), (x1, y1), (x2, y2), 8)
@@ -95,10 +90,7 @@ def draw_drones(
     simulator: Simulator,
     drone_image: pygame.Surface,
     font: pygame.font.Font,
-    scale_x: float,
-    scale_y: float,
-    offset_x: float,
-    offset_y: float,
+    viewport: Viewport
 ) -> None:
     """Draw and animate drones.
 
@@ -116,17 +108,19 @@ def draw_drones(
             target = level.hubs[target_name]
 
             target_x = (
-                offset_x + ((source.x + target.x) / 2) * scale_x)
+                viewport.offset_x + ((
+                    source.x + target.x) / 2) * viewport.scale_x)
 
             target_y = (
-                offset_y - ((source.y + target.y) / 2) * scale_y)
+                viewport.offset_y - ((
+                    source.y + target.y) / 2) * viewport.scale_y)
 
         else:
 
             hub = level.hubs[drone.current_hub]
 
-            target_x = (offset_x + hub.x * scale_x)
-            target_y = (offset_y - hub.y * scale_y)
+            target_x = (viewport.offset_x + hub.x * viewport.scale_x)
+            target_y = (viewport.offset_y - hub.y * viewport.scale_y)
 
         drone.render_x += (target_x - drone.render_x) * 0.15
         drone.render_y += (target_y - drone.render_y) * 0.15
@@ -233,9 +227,8 @@ def update_speed(slider_x: int, slider_width: int,
     return simulation_speed, knob_x
 
 
-def restart_simulation(level: Level, simulator: Simulator, scale_x: float,
-                       scale_y: float,
-                       offset_x: float, offset_y: float) -> bool:
+def restart_simulation(level: Level, simulator: Simulator,
+                       viewport: Viewport) -> bool:
     """Reset the simulation to its initial state.
 
     All drones are moved back to the start hub, occupancies are
@@ -258,8 +251,8 @@ def restart_simulation(level: Level, simulator: Simulator, scale_x: float,
         drone.pending_hub = None
         drone.current_connection = None
         hub = level.hubs[drone.current_hub]
-        drone.render_x = (offset_x + hub.x * scale_x)
-        drone.render_y = (offset_y - hub.y * scale_y)
+        drone.render_x = (viewport.offset_x + hub.x * viewport.scale_x)
+        drone.render_y = (viewport.offset_y - hub.y * viewport.scale_y)
     return True
 
 
@@ -277,84 +270,59 @@ def visualisation(level: Level, simulator: Simulator) -> str | None:
 
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     WIDTH, HEIGHT = screen.get_size()
-    PADDING = 150
-    min_x = min(node.x for node in level.hubs.values())
-    max_x = max(node.x for node in level.hubs.values())
-
-    min_y = min(node.y for node in level.hubs.values())
-    max_y = max(node.y for node in level.hubs.values())
-
-    map_width = max_x - min_x
-    map_height = max_y - min_y
-
-    SCALE_X = (WIDTH - 2 * PADDING) / max(map_width, 1)
-    SCALE_Y = ((HEIGHT - 2 * PADDING) / max(map_height, 1) * 0.8)
-
-    map_pixel_width = map_width * SCALE_X
-    map_pixel_height = map_height * SCALE_Y
-
-    OFFSET_X = ((WIDTH - map_pixel_width) / 2 - min_x * SCALE_X)
-    OFFSET_Y = ((HEIGHT + map_pixel_height) / 2 + min_y * SCALE_Y)
-    MOVE_DURATION = 500
-    paused = False
-    slider_x = 20
-    slider_y = 150
-    slider_width = 250
-    slider_height = 6
-    slider_value = 0.5
-    simulation_speed, knob_x = update_speed(slider_x,
-                                            slider_width, slider_value)
-    dragging_slider = False
+    viewport = build_viewport(level, WIDTH, HEIGHT)
+    ui = build_ui()
+    ui.simulation_speed, ui.knob_x = update_speed(
+        ui.slider_x, ui.slider_width, ui.slider_value)
     last_move = pygame.time.get_ticks()
+    MOVE_DURATION = 500
 
     pygame.display.set_caption("Fly-in")
     clock = pygame.time.Clock()
     drone_image = pygame.image.load("graph/assets/drones.png").convert_alpha()
     drone_image = pygame.transform.scale(drone_image, (50, 50))
     font = pygame.font.Font(None, 30)
-    start_button = pygame.Rect(20, 70, 120, 40)
-    pause_button = pygame.Rect(160, 70, 120, 40)
-    restart_button = pygame.Rect(300, 70, 120, 40)
+    buttons = build_buttons()
     running = True
     for drone in simulator.drones:
         hub = level.hubs[drone.current_hub]
-        drone.render_x = OFFSET_X + hub.x * SCALE_X
-        drone.render_y = OFFSET_Y - hub.y * SCALE_Y
+        drone.render_x = viewport.offset_x + hub.x * viewport.scale_x
+        drone.render_y = viewport.offset_y - hub.y * viewport.scale_y
     while running:
         (
             running,
-            paused,
-            dragging_slider,
+            ui.paused,
+            ui.dragging_slider,
             new_slider_value,
             restart_requested,
             back_to_menu
         ) = handle_events(
             running,
-            paused,
-            dragging_slider,
-            knob_x,
-            slider_x,
-            slider_width,
-            start_button,
-            pause_button,
-            restart_button
+            ui.paused,
+            ui.dragging_slider,
+            ui.knob_x,
+            ui.slider_x,
+            ui.slider_width,
+            buttons.start,
+            buttons.pause,
+            buttons.restart
         )
         if back_to_menu:
             pygame.display.quit()
             return "menu"
         if restart_requested:
-            paused = restart_simulation(level,
-                                        simulator, SCALE_X, SCALE_Y,
-                                        OFFSET_X, OFFSET_Y)
+            ui.paused = restart_simulation(level,
+                                           simulator, viewport)
             last_move = pygame.time.get_ticks()
         if new_slider_value is not None:
-            slider_value = new_slider_value
-        simulation_speed, knob_x = (update_speed(slider_x,
-                                                 slider_width, slider_value))
+            ui.slider_value = new_slider_value
+        ui.simulation_speed, ui.knob_x = (update_speed(ui.slider_x,
+                                                       ui.slider_width,
+                                                       ui.slider_value))
 
         current_time = pygame.time.get_ticks()
-        effective_duration = (MOVE_DURATION / simulation_speed)
-        if (not paused and current_time - last_move > effective_duration):
+        effective_duration = (MOVE_DURATION / ui.simulation_speed)
+        if (not ui.paused and current_time - last_move > effective_duration):
             simulator.step()
             last_move = current_time
             if not all(drone.current_hub == level.end_hub.name for
@@ -362,17 +330,16 @@ def visualisation(level: Level, simulator: Simulator) -> str | None:
                 level.turn += 1
         screen.fill((30, 30, 30))
 
-        draw_ui(screen, font, level, start_button, pause_button,
-                restart_button, slider_x, slider_y, slider_width,
-                slider_height, knob_x, simulation_speed, paused)
+        draw_ui(screen, font, level, buttons.start, buttons.pause,
+                buttons.restart, ui.slider_x, ui.slider_y, ui.slider_width,
+                ui.slider_height, ui.knob_x, ui.simulation_speed, ui.paused)
 
-        draw_connections(screen, level, SCALE_X, SCALE_Y, OFFSET_X, OFFSET_Y)
+        draw_connections(screen, level, viewport)
 
-        draw_hubs(screen, level, simulator, font, SCALE_X,
-                  SCALE_Y, OFFSET_X, OFFSET_Y)
+        draw_hubs(screen, level, simulator, font, viewport)
 
         draw_drones(screen, level, simulator, drone_image,
-                    font, SCALE_X, SCALE_Y, OFFSET_X, OFFSET_Y)
+                    font, viewport)
         current_time = pygame.time.get_ticks()
 
         pygame.display.flip()
