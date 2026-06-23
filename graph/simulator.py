@@ -15,8 +15,7 @@ class Simulator:
 
     def can_enter_hub(self, hub_name: str) -> bool:
         """Check if new_hub occupancy is least than max or if hub is end_hub"""
-        if hub_name == self.graph.end_hub.name:
-            return True
+        hub: Node = self.graph.nodes[hub_name]
         hub: Node = self.graph.nodes[hub_name]
         occupancy = self.hub_occupancy.get(hub_name, 0)
         return occupancy < hub.metadata.max_drones

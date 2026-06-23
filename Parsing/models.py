@@ -1,5 +1,6 @@
 from enum import Enum, auto
 from dataclasses import dataclass, field
+from Parsing.exception import ParsingError
 
 
 class Zone(Enum):
@@ -10,7 +11,7 @@ class Zone(Enum):
     BLOCKED = auto()
 
     @staticmethod
-    def get_zone(zone_str: str) -> "Zone":
+    def get_zone(zone_str: str, line_number: int) -> "Zone":
         """convert matedata.zone in str to Enum """
         match zone_str:
             case "normal":
@@ -21,8 +22,10 @@ class Zone(Enum):
                 return Zone.PRIORITY
             case "blocked":
                 return Zone.BLOCKED
-            case _:
+            case "":
                 return Zone.NORMAL
+            case _:
+                raise ParsingError(line_number, f"Unknow zone : {zone_str}")
 
 
 DEFAULT_COLOR = "gray"

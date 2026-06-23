@@ -86,7 +86,7 @@ def map_selection() -> str:
 
                         rect = pygame.Rect(
                             50 - 12,
-                            150 + i * 55 - 6,
+                            90 + i * 55 - 6,
                             font.size(display_name)[0] + 24,
                             font.size(display_name)[1] + 12
                         )
@@ -107,7 +107,7 @@ def map_selection() -> str:
 
                         rect = pygame.Rect(
                             50 - 12,
-                            140 + i * 55 - 6,
+                            90 + i * 55 - 6,
                             font.size(display_name)[0] + 24,
                             font.size(display_name)[1] + 12
                         )

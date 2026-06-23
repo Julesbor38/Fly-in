@@ -15,7 +15,7 @@ def parse_node_metadata(
     informations, color, zone and max_drones"""
     if not metadata_str:
         return metadata
-    for item in metadata_str.split(" "):
+    for item in metadata_str.split():
         parts = item.split("=")
         if len(parts) != 2:
             raise ParsingError(
@@ -28,7 +28,7 @@ def parse_node_metadata(
             case "color":
                 metadata.color = value
             case "zone":
-                metadata.zone = Zone.get_zone(value)
+                metadata.zone = Zone.get_zone(value, line_number)
             case "max_drones":
                 try:
                     metadata.max_drones = int(value)

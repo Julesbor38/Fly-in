@@ -16,6 +16,9 @@ COLORS = {
     "brown": (165, 42, 42),
     "gold": (255, 215, 0),
     "darkred": (139, 0, 0),
+    "maroon": (128, 0, 0),
+    "violet": (238, 130, 238),
+    "crimson": (220, 20, 60),
 }
 
 
@@ -39,8 +42,7 @@ def draw_hubs(
         x = viewport.offset_x + node.x * viewport.scale_x
         y = viewport.offset_y - node.y * viewport.scale_y
 
-        rgb = COLORS.get(
-            node.metadata.color.lower(), (180, 180, 180))
+        rgb = COLORS.get(node.metadata.color.lower(), (180, 180, 180))
 
         occupancy = simulator.hub_occupancy.get(
             node.name, 0)
@@ -160,6 +162,13 @@ def handle_events(running: bool, paused: bool, dragging_slider: bool,
             running = False
         elif (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             back_to_menu = True
+        elif (event.type == pygame.KEYDOWN and event.key == pygame.K_r):
+            restart_requested = True
+        elif (event.type == pygame. KEYDOWN and event.key == pygame.K_SPACE):
+            if paused is False:
+                paused = True
+            else:
+                paused = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if start_button.collidepoint(event.pos):
                 paused = False
@@ -200,10 +209,9 @@ def draw_ui(screen: pygame.Surface, font: pygame.font.Font, level: Level,
                                                slider_width, slider_height))
     pygame.draw.circle(screen, (255, 255, 255),
                        (int(knob_x), slider_y + slider_height // 2), 10)
-    screen.blit(font.render("Start", True, (255, 255, 255)), (50, 80))
+    screen.blit(font.render("Start", True, (255, 255, 255)), (55, 80))
     screen.blit(font.render("Pause", True, (255, 255, 255)), (190, 80))
-    screen.blit(font.render("Restart", True, (255, 255, 255)),
-                (restart_button.x + 15, restart_button.y + 10))
+    screen.blit(font.render("Restart", True, (255, 255, 255)), (325, 80))
     speed_text = font.render(f"Speed x{simulation_speed:.1f}",
                              True, (255, 255, 255))
     screen.blit(speed_text, (slider_x, slider_y + 25))
@@ -256,7 +264,9 @@ def restart_simulation(level: Level, simulator: Simulator,
     return True
 
 
-def visualisation(level: Level, simulator: Simulator) -> str | None:
+def visualisation(level: Level, simulator: Simulator,
+                  map_name: str) -> str | None:
+    from pathlib import Path
     """Run the main visualization loop.
 
     Creates the Pygame window, renders the graph and drones,
@@ -282,6 +292,7 @@ def visualisation(level: Level, simulator: Simulator) -> str | None:
     drone_image = pygame.image.load("graph/assets/drones.png").convert_alpha()
     drone_image = pygame.transform.scale(drone_image, (50, 50))
     font = pygame.font.Font(None, 30)
+
     buttons = build_buttons()
     running = True
     for drone in simulator.drones:
@@ -328,10 +339,15 @@ def visualisation(level: Level, simulator: Simulator) -> str | None:
             if not all(drone.current_hub == level.end_hub.name for
                        drone in simulator.drones):
                 level.turn += 1
+  
             elif level.is_finished is False:
                 level.turn += 1
                 level.is_finished = True
         screen.fill((30, 30, 30))
+        title = font.render(Path(map_name).stem[3:], True, (255, 255, 255))
+
+        screen.blit(title, (
+            screen.get_width() // 2 - title.get_width() // 2, 20))
 
         draw_ui(screen, font, level, buttons.start, buttons.pause,
                 buttons.restart, ui.slider_x, ui.slider_y, ui.slider_width,

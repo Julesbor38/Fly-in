@@ -43,17 +43,21 @@ def main() -> None:
             )
         except Exception as e:
             print(e)
-            continue
+            break
+        try:
+            action = visualisation(
+                level,
+                simulator,
+                selected_map
+            )
 
-        action = visualisation(
-            level,
-            simulator
-        )
+            if action == "menu":
+                continue
 
-        if action == "menu":
-            continue
-
-        break
+            break
+        except (Exception, KeyboardInterrupt):
+            print("Warning, please interrupt program properly")
+            break
 
 
 if __name__ == "__main__":
