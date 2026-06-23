@@ -1,5 +1,5 @@
 from Parsing.models import Level, Node, Connection, Zone
-
+from Parsing.exception import MapError
 
 class Graph:
 
@@ -49,3 +49,41 @@ class Graph:
 
     def is_priority_hub(self, hub_name: str) -> bool:
         return (self.nodes[hub_name].metadata.zone == Zone.PRIORITY)
+
+    def shortest_path(self, start: str, end: str) -> list[str]:
+        """THis method will only be sed to check if a path exist
+        between start and goal"""
+        from heapq import heappush, heappop
+
+        distances = {
+            node_name: float("inf")
+            for node_name in self.nodes
+        }
+        distances[start] = 0
+        parents: dict[str, str | None] = {
+            start: None
+        }
+        heap: list[tuple[float, str]] = []
+        heappush(heap, (0, start))
+        while heap:
+            current_cost, current = heappop(heap)
+            if current_cost > distances[current]:
+                continue
+            if current == end:
+                break
+            for neighbor in self.adjacency[current]:
+                if self.nodes[neighbor].metadata.zone == Zone.BLOCKED:
+                    continue
+                new_cost = (current_cost + self.get_travel_time(neighbor))
+                if new_cost < distances[neighbor]:
+                    distances[neighbor] = new_cost
+                    parents[neighbor] = current
+                    heappush(heap, (new_cost, neighbor))
+        if end not in parents:
+            raise MapError("Couldn't find Exit point from start")
+        path: list[str] = []
+        current: str | None = end
+        while current is not None:
+            path.append(current)
+            current = parents[current]
+        return path[::-1]

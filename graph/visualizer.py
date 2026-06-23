@@ -328,6 +328,9 @@ def visualisation(level: Level, simulator: Simulator) -> str | None:
             if not all(drone.current_hub == level.end_hub.name for
                        drone in simulator.drones):
                 level.turn += 1
+            elif level.is_finished is False:
+                level.turn += 1
+                level.is_finished = True
         screen.fill((30, 30, 30))
 
         draw_ui(screen, font, level, buttons.start, buttons.pause,

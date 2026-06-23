@@ -83,3 +83,4 @@ class Level:
     hubs: dict[str, Node]
     connections: list[Connection]
     turn: int = 0
+    is_finished: bool = False
