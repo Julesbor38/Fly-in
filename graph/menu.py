@@ -40,7 +40,7 @@ def map_selection() -> str:
         screen = pygame.display.set_mode((1200, 800))
 
         font = pygame.font.Font(None, 40)
-        fond = pygame.image.load("graph/assets/image.png").convert()
+        fond = pygame.image.load("graph/assets/menu.png").convert()
         fond = pygame.transform.scale(fond, (1200, 800))
 
         maps = get_maps()
