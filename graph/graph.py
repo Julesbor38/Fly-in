@@ -1,6 +1,7 @@
 from Parsing.models import Level, Node, Connection, Zone
 from Parsing.exception import MapError
 
+
 class Graph:
 
     def __init__(self, level: Level) -> None:
@@ -51,7 +52,7 @@ class Graph:
         return (self.nodes[hub_name].metadata.zone == Zone.PRIORITY)
 
     def shortest_path(self, start: str, end: str) -> list[str]:
-        """THis method will only be sed to check if a path exist
+        """This method will only be sed to check if a path exist
         between start and goal"""
         from heapq import heappush, heappop
 

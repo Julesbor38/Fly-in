@@ -117,30 +117,6 @@ def map_selection() -> str:
                             break
             screen.blit(fond, (0, 0))
 
-            draw_text_box(
-                screen,
-                "Press ENTER to launch",
-                font,
-                (180, 180, 180),
-                (50, 30)
-            )
-
-            draw_text_box(
-                screen,
-                "Choose a map",
-                font,
-                (255, 255, 255),
-                (50, 85)
-            )
-
-            draw_text_box(
-                screen,
-                "Press ESC to quit",
-                font,
-                (255, 50, 50),
-                (930, 30)
-            )
-
             for i, (map_name, is_valid) in enumerate(maps):
                 if not is_valid:
                     color = (255, 50, 50)
@@ -153,10 +129,10 @@ def map_selection() -> str:
                     display_name += " [UNUSABLE]"
                 draw_text_box(
                             screen,
-                            display_name,
+                            display_name[3:],
                             font,
                             color,
-                            (50, 140 + i * 55)
+                            (50, 90 + i * 55)
                         )
 
             pygame.display.flip()
@@ -166,7 +142,8 @@ def map_selection() -> str:
 
 
 def draw_text_box(screen: pygame.Surface, text: str, font: pygame.font.Font,
-                  text_color: tuple[int, int, int], pos: tuple[int, int]) -> pygame.Rect:
+                  text_color: tuple[int, int, int],
+                  pos: tuple[int, int]) -> pygame.Rect:
 
     txt = font.render(text, True, text_color)
     rect = txt.get_rect(topleft=pos)
@@ -212,4 +189,3 @@ def draw_text_box(screen: pygame.Surface, text: str, font: pygame.font.Font,
 
     screen.blit(txt, rect)
     return box_rect
-
