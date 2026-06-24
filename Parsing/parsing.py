@@ -99,7 +99,7 @@ class Parser:
         if "[" in content:
             content, metadata_part = content.split("[", 1)
             metadata_part = metadata_part.rstrip("]")
-            metadata = parse_node_metadata(metadata_part, line_number)
+            metadata = parse_node_metadata(self, metadata_part, line_number)
         info = content.split()
         if len(info) != 3:
             self.errors.append((line_number,
@@ -143,7 +143,7 @@ class Parser:
         if "[" in content:
             content, metadata_part = content.split("[", 1)
             metadata_part = metadata_part.rstrip("]")
-            metadata = parse_node_metadata(metadata_part, line_number)
+            metadata = parse_node_metadata(self, metadata_part, line_number)
         info = content.split()
         if len(info) != 3:
             self.errors.append((line_number,
@@ -193,7 +193,7 @@ class Parser:
         if "[" in content:
             content, metadata_part = content.split("[", 1)
             metadata_part = metadata_part.rstrip("]")
-            metadata = parse_node_metadata(metadata_part, line_number)
+            metadata = parse_node_metadata(self, metadata_part, line_number)
         info = content.split()
         if len(info) != 3:
             self.errors.append((line_number, "hub must contain name, x, y"))
@@ -223,8 +223,8 @@ class Parser:
         if "[" in content:
             content, metadata_part = content.split("[", 1)
             metadata_part = metadata_part.rstrip("]")
-            metadata = parse_connection_metadata(
-                metadata_part, line_number)
+            metadata = parse_connection_metadata(self,
+                                                 metadata_part, line_number)
         connection = content.split("-")
         if len(connection) != 2:
             self.errors.append((line_number,

@@ -1,12 +1,11 @@
-from .models import (
-    NodeMetadata,
-    ConnectionMetadata,
-    Zone
-)
-from .exception import ParsingError
+from .models import (NodeMetadata, ConnectionMetadata, Zone)
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from Parsing.parsing import Parser
 
 
 def parse_node_metadata(
+    parser: "Parser",
     metadata_str: str,
     line_number: int
 ) -> NodeMetadata:
@@ -18,10 +17,10 @@ def parse_node_metadata(
     for item in metadata_str.split():
         parts = item.split("=")
         if len(parts) != 2:
-            raise ParsingError(
+            parser.errors.append((
                 line_number,
                 f"invalid metadata {item}"
-            )
+            ))
         key = parts[0]
         value = parts[1]
         match key:
@@ -33,24 +32,25 @@ def parse_node_metadata(
                 try:
                     metadata.max_drones = int(value)
                 except ValueError:
-                    raise ParsingError(
+                    parser.errors.append((
                         line_number,
                         "max_drones must be an integer"
-                    )
+                    ))
                 if metadata.max_drones <= 0:
-                    raise ParsingError(
+                    parser.errors.append((
                         line_number,
                         "max_drones must be > 0"
-                    )
+                    ))
             case _:
-                raise ParsingError(
+                parser.errors.append((
                     line_number,
                     f"unknown metadata key '{key}'"
-                )
+                ))
     return metadata
 
 
 def parse_connection_metadata(
+    parser: "Parser",
     metadata_str: str,
     line_number: int
 ) -> ConnectionMetadata:
@@ -62,10 +62,10 @@ def parse_connection_metadata(
     for item in metadata_str.split(" "):
         parts = item.split("=")
         if len(parts) != 2:
-            raise ParsingError(
+            parser.errors.append((
                 line_number,
                 f"invalid metadata {item}"
-            )
+            ))
         key = parts[0]
         value = parts[1]
         match key:
@@ -73,18 +73,18 @@ def parse_connection_metadata(
                 try:
                     metadata.max_link_capacity = int(value)
                 except ValueError:
-                    raise ParsingError(
+                    parser.errors.append((
                         line_number,
                         "max_link_capacity must be an integer"
-                    )
+                    ))
                 if metadata.max_link_capacity <= 0:
-                    raise ParsingError(
+                    parser.errors.append((
                         line_number,
                         "max_link_capacity must be > 0"
-                    )
+                    ))
             case _:
-                raise ParsingError(
+                parser.errors.append((
                     line_number,
                     f"unknown metadata key '{key}'"
-                )
+                ))
     return metadata

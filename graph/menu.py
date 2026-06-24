@@ -21,12 +21,15 @@ def get_maps() -> list[tuple[str, bool]]:
             path = graph.shortest_path(
                 graph.start_hub.name, graph.end_hub.name)
             if not path:
-                raise MapError(f"Couldn't find Exit point from start: {file}")
-            maps.append((str(file), True))
+                parser.errors.append(None,
+                                     f"Couldn't find Exit point from start: {file}")
+                maps.append((str(file), False))
+            else:
+                maps.append((str(file), True))
         except Exception:
             maps.append((str(file), False))
             errors.append(f"Map: {file}")
-            if parser:
+            if parser is not None and parser.errors:
                 for line, error in parser.errors:
                     if line is None:
                         errors.append(error)
