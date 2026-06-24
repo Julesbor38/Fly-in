@@ -10,8 +10,10 @@ def get_maps() -> list[tuple[str, bool]]:
     this is usefull in map_selection to get a representation of unusable map"""
 
     maps: list[tuple[str, bool]] = []
+    errors: list[str] = []
 
     for file in Path("maps").rglob("*.txt"):
+        parser: Parser | None = None
         try:
             parser = Parser(str(file))
             level = parser.parsing()
@@ -23,6 +25,22 @@ def get_maps() -> list[tuple[str, bool]]:
             maps.append((str(file), True))
         except Exception:
             maps.append((str(file), False))
+            errors.append(f"Map: {file}")
+            if parser:
+                for line, error in parser.errors:
+                    if line is None:
+                        errors.append(error)
+                    else:
+                        errors.append(f"Line {line}: {error}")
+    with open("map_errors.txt", "w") as report:
+
+        report.write(
+            "=== MAP VALIDATION REPORT ===\n\n"
+        )
+
+        for error in errors:
+            report.write(error)
+            report.write("\n")
     maps.sort()
 
     return maps

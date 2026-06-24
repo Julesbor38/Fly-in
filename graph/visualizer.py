@@ -339,10 +339,11 @@ def visualisation(level: Level, simulator: Simulator,
             if not all(drone.current_hub == level.end_hub.name for
                        drone in simulator.drones):
                 level.turn += 1
-  
+
             elif level.is_finished is False:
                 level.turn += 1
                 level.is_finished = True
+                simulator.connection_occupancy.clear()
         screen.fill((30, 30, 30))
         title = font.render(Path(map_name).stem[3:], True, (255, 255, 255))
 
